@@ -1,0 +1,115 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PrismaUserRepository = void 0;
+const common_1 = require("@nestjs/common");
+const prisma_service_1 = require("../../../prisma.service");
+const user_entity_1 = require("../../domain/user.entity");
+let PrismaUserRepository = class PrismaUserRepository {
+    prisma;
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async create(data) {
+        const user = await this.prisma.user.create({
+            data: {
+                name: data.name,
+                email: data.email,
+                age: data.age,
+                profile: { create: {} },
+                subscription: { create: { plan: 'FREE' } }
+            },
+        });
+        return new user_entity_1.UserEntity(user.id, user.name, user.email, user.age, user.createdAt, user.updatedAt);
+    }
+    async findById(id) {
+        const user = await this.prisma.user.findUnique({
+            where: { id },
+            include: {
+                profile: true,
+                favoriteMusic: true,
+                photos: true,
+                subscription: true
+            }
+        });
+        if (!user)
+            return null;
+        return new user_entity_1.UserEntity(user.id, user.name, user.email, user.age, user.createdAt, user.updatedAt);
+    }
+    async findAll() {
+        const users = await this.prisma.user.findMany({ include: { profile: true } });
+        return users.map(u => new user_entity_1.UserEntity(u.id, u.name, u.email, u.age, u.createdAt, u.updatedAt));
+    }
+    async saveLike(likerId, likedId) {
+        await this.prisma.like.create({ data: { likerId, likedId } });
+    }
+    async checkMatch(user1Id, user2Id) {
+        const like = await this.prisma.like.findFirst({
+            where: { likerId: user2Id, likedId: user1Id }
+        });
+        return !!like;
+    }
+    async createMatch(user1Id, user2Id) {
+        return await this.prisma.match.create({
+            data: {
+                user1Id,
+                user2Id,
+                chatRoom: { create: {} }
+            },
+            include: { chatRoom: true }
+        });
+    }
+    async updateProfile(userId, data) {
+        return await this.prisma.profile.update({
+            where: { userId },
+            data
+        });
+    }
+    async addPhoto(userId, url) {
+        return await this.prisma.photo.create({ data: { url, userId } });
+    }
+    async addFavoriteMusic(userId, music) {
+        return await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                favoriteMusic: { create: music }
+            }
+        });
+    }
+    async sendMessage(chatRoomId, senderId, content) {
+        return await this.prisma.message.create({
+            data: {
+                chatRoomId,
+                senderId,
+                content
+            }
+        });
+    }
+    async getChatMessages(chatRoomId) {
+        return await this.prisma.message.findMany({
+            where: { chatRoomId },
+            orderBy: { createdAt: 'asc' },
+            include: { sender: true }
+        });
+    }
+    async updateSubscription(userId, plan) {
+        return await this.prisma.subscription.update({
+            where: { userId },
+            data: { plan }
+        });
+    }
+};
+exports.PrismaUserRepository = PrismaUserRepository;
+exports.PrismaUserRepository = PrismaUserRepository = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+], PrismaUserRepository);
+//# sourceMappingURL=prisma-user.repository.js.map
