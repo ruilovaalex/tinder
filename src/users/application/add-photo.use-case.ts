@@ -1,11 +1,15 @@
-import { Injectable, Inject } from '@nestjs/common';
-import type { UserRepository } from '../domain/user.repository';
+import { Inject, Injectable } from '@nestjs/common';
+import { PROFILE_REPOSITORY } from '../domain/repositories/profile.repository';
+import type { ProfileRepository } from '../domain/repositories/profile.repository';
 
 @Injectable()
 export class AddPhotoUseCase {
-  constructor(@Inject('UserRepository') private readonly userRepository: UserRepository) {}
+  constructor(
+    @Inject(PROFILE_REPOSITORY)
+    private readonly profileRepository: ProfileRepository,
+  ) {}
 
   async execute(userId: number, url: string) {
-    return await this.userRepository.addPhoto(userId, url);
+    return await this.profileRepository.addPhoto(userId, url);
   }
 }

@@ -1,11 +1,18 @@
-import { Injectable, Inject } from '@nestjs/common';
-import type { UserRepository } from '../domain/user.repository';
+import { Inject, Injectable } from '@nestjs/common';
+import { PROFILE_REPOSITORY } from '../domain/repositories/profile.repository';
+import type {
+  AddMusicData,
+  ProfileRepository,
+} from '../domain/repositories/profile.repository';
 
 @Injectable()
 export class AddMusicUseCase {
-  constructor(@Inject('UserRepository') private readonly userRepository: UserRepository) {}
+  constructor(
+    @Inject(PROFILE_REPOSITORY)
+    private readonly profileRepository: ProfileRepository,
+  ) {}
 
-  async execute(userId: number, music: { title: string, artist: string, genre?: string }) {
-    return await this.userRepository.addFavoriteMusic(userId, music);
+  async execute(userId: number, music: AddMusicData) {
+    return await this.profileRepository.addFavoriteMusic(userId, music);
   }
 }

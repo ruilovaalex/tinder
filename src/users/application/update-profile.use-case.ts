@@ -1,11 +1,19 @@
-import { Injectable, Inject } from '@nestjs/common';
-import type { UserRepository } from '../domain/user.repository';
+import { Inject, Injectable } from '@nestjs/common';
+import { PROFILE_REPOSITORY } from '../domain/repositories/profile.repository';
+import type { ProfileRepository } from '../domain/repositories/profile.repository';
 
 @Injectable()
 export class UpdateProfileUseCase {
-  constructor(@Inject('UserRepository') private readonly userRepository: UserRepository) {}
+  constructor(
+    @Inject(PROFILE_REPOSITORY)
+    private readonly profileRepository: ProfileRepository,
+  ) {}
 
   async execute(userId: number, bio: string, gender: string, city: string) {
-    return await this.userRepository.updateProfile(userId, { bio, gender, city });
+    return await this.profileRepository.updateProfile(userId, {
+      bio,
+      gender,
+      city,
+    });
   }
 }

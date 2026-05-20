@@ -1,28 +1,39 @@
-import { Injectable, Inject } from '@nestjs/common';
-import type { UserRepository } from '../domain/user.repository';
+import { Inject, Injectable } from '@nestjs/common';
+import { CHAT_REPOSITORY } from '../domain/repositories/chat.repository';
+import type { ChatRepository } from '../domain/repositories/chat.repository';
+import { INTERACTION_REPOSITORY } from '../domain/repositories/interaction.repository';
+import type { InteractionRepository } from '../domain/repositories/interaction.repository';
 
 @Injectable()
 export class GiveLikeUseCase {
   constructor(
-    @Inject('UserRepository') private readonly userRepository: UserRepository
+    @Inject(INTERACTION_REPOSITORY)
+    private readonly interactionRepository: InteractionRepository,
+    @Inject(CHAT_REPOSITORY)
+    private readonly chatRepository: ChatRepository,
   ) {}
 
   async execute(likerId: number, likedId: number) {
     if (likerId === likedId) throw new Error('No puedes darte like a ti mismo');
 
-    // 1. Guardar el like
-    await this.userRepository.saveLike(likerId, likedId);
+    await this.interactionRepository.saveLike(likerId, likedId);
 
-    // 2. Verificar reciprocidad
-    const isMatch = await this.userRepository.checkMatch(likerId, likedId);
+    const isMatch = await this.interactionRepository.hasReciprocalLike(
+      likerId,
+      likedId,
+    );
 
     if (isMatch) {
-      // 3. CREAR EL MATCH Y LA CHATROOM
-      const matchData = await this.userRepository.createMatch(likerId, likedId);
-      return { 
-        match: true, 
-        message: '¡Es un Match! Sala de chat creada.',
-        chatRoomId: matchData.chatRoom.id 
+      const matchData = await this.interactionRepository.createMatch(
+        likerId,
+        likedId,
+      );
+      const chatRoom = await this.chatRepository.createChatRoom(matchData.id);
+
+      return {
+        match: true,
+        message: 'Es un Match! Sala de chat creada.',
+        chatRoomId: chatRoom.id,
       };
     }
 
