@@ -11,10 +11,13 @@ import {
 import { RequirePermissions } from '../../../auth/decorators/permissions.decorator';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../auth/infrastructure/guards/permissions.guard';
+import { Roles } from '../../../auth/decorators/roles.decorator';
+import { RolesGuard } from '../../../auth/infrastructure/guards/roles.guard';
 import { UserRoleService } from '../../application/user-role.service';
 import { CreateUserRoleDto } from '../../dto/create-user-role.dto';
 
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@Roles('admin')
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Controller('user-roles')
 export class UserRoleController {
   constructor(private readonly userRoleService: UserRoleService) {}

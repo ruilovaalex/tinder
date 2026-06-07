@@ -14,6 +14,17 @@
     "prisma:generate:chat": "prisma generate --config src/chat-service/prisma.config.ts",
     "prisma:generate:interaction": "prisma generate --config src/interaction-service/prisma.config.ts",
     "prisma:generate:subscription": "prisma generate --config src/subscription-service/prisma.config.ts",
+    "prisma:migrate:deploy": "npm run prisma:migrate:deploy:user && npm run prisma:migrate:deploy:chat && npm run prisma:migrate:deploy:interaction && npm run prisma:migrate:deploy:subscription",
+    "prisma:migrate:deploy:user": "prisma migrate deploy --config src/user-service/prisma.config.ts",
+    "prisma:migrate:deploy:chat": "prisma migrate deploy --config src/chat-service/prisma.config.ts",
+    "prisma:migrate:deploy:interaction": "prisma migrate deploy --config src/interaction-service/prisma.config.ts",
+    "prisma:migrate:deploy:subscription": "prisma migrate deploy --config src/subscription-service/prisma.config.ts",
+    "prisma:migrate:status": "npm run prisma:migrate:status:user && npm run prisma:migrate:status:chat && npm run prisma:migrate:status:interaction && npm run prisma:migrate:status:subscription",
+    "prisma:migrate:status:user": "prisma migrate status --config src/user-service/prisma.config.ts",
+    "prisma:migrate:status:chat": "prisma migrate status --config src/chat-service/prisma.config.ts",
+    "prisma:migrate:status:interaction": "prisma migrate status --config src/interaction-service/prisma.config.ts",
+    "prisma:migrate:status:subscription": "prisma migrate status --config src/subscription-service/prisma.config.ts",
+    "seed:admin": "npm run build && node dist/scripts/seed-admin.js",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -23,7 +34,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -36,6 +47,9 @@
     "@types/bcrypt": "^6.0.0",
     "@types/passport-jwt": "^4.0.1",
     "bcrypt": "^6.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "dotenv": "^17.2.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.21.0",
@@ -78,6 +92,9 @@
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

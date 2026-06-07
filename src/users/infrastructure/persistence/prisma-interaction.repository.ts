@@ -8,7 +8,11 @@ export class PrismaInteractionRepository implements InteractionRepository {
   constructor(private readonly interactionsDb: InteractionPrismaService) {}
 
   async saveLike(likerId: number, likedId: number): Promise<void> {
-    await this.interactionsDb.like.create({ data: { likerId, likedId } });
+    await this.interactionsDb.like.upsert({
+      where: { likerId_likedId: { likerId, likedId } },
+      update: {},
+      create: { likerId, likedId },
+    });
   }
 
   async hasReciprocalLike(user1Id: number, user2Id: number): Promise<boolean> {
@@ -20,8 +24,23 @@ export class PrismaInteractionRepository implements InteractionRepository {
   }
 
   createMatch(user1Id: number, user2Id: number): Promise<MatchEntity> {
-    return this.interactionsDb.match.create({
-      data: { user1Id, user2Id },
+    const [firstUserId, secondUserId] = [user1Id, user2Id].sort(
+      (first, second) => first - second,
+    );
+
+    return this.interactionsDb.match.upsert({
+      where: {
+        user1Id_user2Id: {
+          user1Id: firstUserId,
+          user2Id: secondUserId,
+        },
+      },
+      update: {},
+      create: { user1Id: firstUserId, user2Id: secondUserId },
     });
+  }
+
+  findMatchById(matchId: number): Promise<MatchEntity | null> {
+    return this.interactionsDb.match.findUnique({ where: { id: matchId } });
   }
 }

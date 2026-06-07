@@ -1,4 +1,11 @@
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
 export class CreatePermissionDto {
-  name: string;
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 }

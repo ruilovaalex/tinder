@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SubscriptionPrismaService } from '../../../prisma-clients/subscription-prisma.service';
 import { SubscriptionEntity } from '../../domain/entities/subscription.entity';
+import { SubscriptionPlan } from '../../domain/entities/subscription.entity';
 import { SubscriptionRepository } from '../../domain/repositories/subscription.repository';
 
 @Injectable()
@@ -15,7 +16,7 @@ export class PrismaSubscriptionRepository implements SubscriptionRepository {
 
   async updateSubscription(
     userId: number,
-    plan: string,
+    plan: SubscriptionPlan,
   ): Promise<SubscriptionEntity> {
     const subscription = await this.subscriptionsDb.subscription.findFirst({
       where: { userId },

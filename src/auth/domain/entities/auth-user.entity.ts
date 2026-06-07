@@ -3,6 +3,7 @@ export interface AuthUserEntity {
   email: string;
   name: string;
   password: string | null;
+  refreshTokenHash: string | null;
   isActive: boolean;
   roles: string[];
   permissions: string[];

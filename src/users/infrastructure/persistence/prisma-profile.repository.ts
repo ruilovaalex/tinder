@@ -52,6 +52,9 @@ export class PrismaProfileRepository implements ProfileRepository {
         title: music.title,
         artist: music.artist,
         genre: music.genre,
+        users: {
+          create: { userId },
+        },
       },
     });
   }

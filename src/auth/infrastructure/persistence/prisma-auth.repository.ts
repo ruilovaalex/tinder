@@ -24,6 +24,15 @@ export class PrismaAuthRepository implements AuthRepository {
     return user ? this.toAuthUser(user) : null;
   }
 
+  async findById(id: number): Promise<AuthUserEntity | null> {
+    const user = await this.usersDb.user.findUnique({
+      where: { id },
+      include: this.userAuthInclude(),
+    });
+
+    return user ? this.toAuthUser(user) : null;
+  }
+
   async createUser(data: CreateAuthUserData): Promise<AuthUserEntity> {
     const user = await this.usersDb.user.create({
       data: {
@@ -56,6 +65,16 @@ export class PrismaAuthRepository implements AuthRepository {
   countUsersByRole(roleId: number): Promise<number> {
     return this.usersDb.userRole.count({
       where: { roleId },
+    });
+  }
+
+  async updateRefreshTokenHash(
+    userId: number,
+    refreshTokenHash: string | null,
+  ): Promise<void> {
+    await this.usersDb.user.update({
+      where: { id: userId },
+      data: { refreshTokenHash },
     });
   }
 
@@ -137,6 +156,7 @@ export class PrismaAuthRepository implements AuthRepository {
       email: user.email,
       name: user.name,
       password: user.password,
+      refreshTokenHash: user.refreshTokenHash,
       isActive: user.isActive,
       roles: user.userRoles.map((userRole) => userRole.role.name),
       permissions: [...permissions],

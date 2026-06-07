@@ -6,6 +6,7 @@
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -18,11 +19,15 @@ model User {
   email     String   @unique
   age       Int
   password  String?
+  refreshTokenHash String?
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   userRoles UserRole[]
+  profile   Profile?
+  photos    Photo[]
+  music     UserMusic[]
 }
 
 model Profile {
@@ -38,6 +43,10 @@ model Profile {
 
   isOnline Boolean   @default(false)
   lastSeen DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
 }
 
 model Photo {
@@ -45,6 +54,8 @@ model Photo {
   url    String
   order  Int @default(0)
   userId Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Music {
@@ -53,6 +64,19 @@ model Music {
   artist String
   genre  String?
   url    String?
+
+  users UserMusic[]
+}
+
+model UserMusic {
+  userId  Int
+  musicId Int
+  addedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  music Music @relation(fields: [musicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, musicId])
 }
 
 model Role {

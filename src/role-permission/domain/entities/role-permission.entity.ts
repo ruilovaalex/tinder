@@ -7,12 +7,10 @@ export interface RolePermissionEntity {
   permissionId: number;
 }
 
-export interface RolePermissionWithPermissionEntity
-  extends RolePermissionEntity {
+export interface RolePermissionWithPermissionEntity extends RolePermissionEntity {
   permission: PermissionEntity;
 }
 
-export interface RolePermissionWithRoleAndPermissionEntity
-  extends RolePermissionWithPermissionEntity {
+export interface RolePermissionWithRoleAndPermissionEntity extends RolePermissionWithPermissionEntity {
   role: RoleEntity;
 }

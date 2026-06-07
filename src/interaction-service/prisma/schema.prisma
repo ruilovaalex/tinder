@@ -6,6 +6,7 @@
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -19,6 +20,7 @@ model Like {
   createdAt DateTime @default(now())
 
   @@unique([likerId, likedId])
+  @@index([likedId, likerId])
 }
 
 model Match {

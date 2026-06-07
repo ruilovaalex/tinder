@@ -10,6 +10,7 @@ export interface ChatRoomEntity {
 
 export interface ChatRepository {
   createChatRoom(matchId: number): Promise<ChatRoomEntity>;
+  findChatRoom(chatRoomId: number): Promise<ChatRoomEntity | null>;
   sendMessage(
     chatRoomId: number,
     senderId: number,

@@ -11,7 +11,15 @@ export class PrismaChatRepository implements ChatRepository {
   constructor(private readonly chatDb: ChatPrismaService) {}
 
   createChatRoom(matchId: number): Promise<ChatRoomEntity> {
-    return this.chatDb.chatRoom.create({ data: { matchId } });
+    return this.chatDb.chatRoom.upsert({
+      where: { matchId },
+      update: {},
+      create: { matchId },
+    });
+  }
+
+  findChatRoom(chatRoomId: number): Promise<ChatRoomEntity | null> {
+    return this.chatDb.chatRoom.findUnique({ where: { id: chatRoomId } });
   }
 
   sendMessage(

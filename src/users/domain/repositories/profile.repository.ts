@@ -18,7 +18,10 @@ export interface AddMusicData {
 
 export interface ProfileRepository {
   createEmptyProfile(userId: number): Promise<ProfileEntity>;
-  updateProfile(userId: number, data: UpdateProfileData): Promise<ProfileEntity>;
+  updateProfile(
+    userId: number,
+    data: UpdateProfileData,
+  ): Promise<ProfileEntity>;
   addPhoto(userId: number, url: string): Promise<PhotoEntity>;
   addFavoriteMusic(userId: number, music: AddMusicData): Promise<MusicEntity>;
 }

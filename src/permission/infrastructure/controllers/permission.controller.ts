@@ -12,11 +12,14 @@ import {
 import { RequirePermissions } from '../../../auth/decorators/permissions.decorator';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../auth/infrastructure/guards/permissions.guard';
+import { Roles } from '../../../auth/decorators/roles.decorator';
+import { RolesGuard } from '../../../auth/infrastructure/guards/roles.guard';
 import { PermissionService } from '../../application/permission.service';
 import { CreatePermissionDto } from '../../dto/create-permission.dto';
 import { UpdatePermissionDto } from '../../dto/update-permission.dto';
 
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@Roles('admin')
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Controller('permissions')
 export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}

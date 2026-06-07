@@ -1,17 +1,34 @@
-import { Controller, Post, Body, Get, Param, ParseIntPipe } from '@nestjs/common';
-import { RegisterUserUseCase } from 'src/users/application/register-user.use-case';
-import { GetAllUsersUseCase } from 'src/users/application/get-all-users.use-case';
-import { GiveLikeUseCase } from 'src/users/application/give-like.use-case';
-import { UpdateProfileUseCase } from 'src/users/application/update-profile.use-case';
-import { AddMusicUseCase } from 'src/users/application/add-music.use-case';
-import { SendMessageUseCase } from 'src/users/application/send-message.use-case';
-import { AddPhotoUseCase } from 'src/users/application/add-photo.use-case';
-import { ChangeSubscriptionUseCase } from 'src/users/application/change-subscription.use-case';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
+import type { AuthenticatedUser } from '../../../auth/interfaces/authenticated-user.interface';
+import { AddMusicUseCase } from '../../application/add-music.use-case';
+import { AddPhotoUseCase } from '../../application/add-photo.use-case';
+import { ChangeSubscriptionUseCase } from '../../application/change-subscription.use-case';
+import { GetAllUsersUseCase } from '../../application/get-all-users.use-case';
+import { GiveLikeUseCase } from '../../application/give-like.use-case';
+import { SendMessageUseCase } from '../../application/send-message.use-case';
+import { UpdateProfileUseCase } from '../../application/update-profile.use-case';
+import { AddMusicDto } from '../../dto/add-music.dto';
+import { AddPhotoDto } from '../../dto/add-photo.dto';
+import { ChangeSubscriptionDto } from '../../dto/change-subscription.dto';
+import { GiveLikeDto } from '../../dto/give-like.dto';
+import { SendMessageDto } from '../../dto/send-message.dto';
+import { UpdateProfileDto } from '../../dto/update-profile.dto';
 
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(
-    private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly getAllUsersUseCase: GetAllUsersUseCase,
     private readonly giveLikeUseCase: GiveLikeUseCase,
     private readonly updateProfileUseCase: UpdateProfileUseCase,
@@ -21,83 +38,64 @@ export class UsersController {
     private readonly changeSubscriptionUseCase: ChangeSubscriptionUseCase,
   ) {}
 
-  // Registro de Usuario 
-  @Post('register')
-  async register(@Body() body: { name: string; email: string; age: number }) {
-    return await this.registerUserUseCase.execute(
-      body.name, 
-      body.email, 
-      body.age
-    );
-  }
-
-  // Listar todos los usuarios 
   @Get()
-  async findAll() {
-    return await this.getAllUsersUseCase.execute();
+  findAll() {
+    return this.getAllUsersUseCase.execute();
   }
 
-  //  likes y Matches
   @Post('like')
-  async giveLike(@Body() body: { likerId: number; likedId: number }) {
-    return await this.giveLikeUseCase.execute(
-      body.likerId, 
-      body.likedId
-    );
+  giveLike(@CurrentUser() user: AuthenticatedUser, @Body() body: GiveLikeDto) {
+    return this.giveLikeUseCase.execute(user.id, body.likedId);
   }
 
-  //  Actualizar Perfil 
-  @Post('profile')
-  async updateProfile(
-    @Body() body: { userId: number; bio: string; gender: string; city: string }
+  @Patch('profile')
+  updateProfile(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: UpdateProfileDto,
   ) {
-    return await this.updateProfileUseCase.execute(
-      body.userId,
+    return this.updateProfileUseCase.execute(
+      user.id,
       body.bio,
       body.gender,
-      body.city
+      body.city,
     );
   }
 
-  //  Añadir Música Favorita
   @Post('music')
-  async addMusic(
-    @Body() body: { userId: number; title: string; artist: string; genre?: string }
-  ) {
-    return await this.addMusicUseCase.execute(
-      body.userId,
-      { title: body.title, artist: body.artist, genre: body.genre }
-    );
+  addMusic(@CurrentUser() user: AuthenticatedUser, @Body() body: AddMusicDto) {
+    return this.addMusicUseCase.execute(user.id, body);
   }
 
-  //  Enviar Mensaje a una ChatRoom
   @Post('chat/send')
-  async sendMessage(
-    @Body() body: { chatRoomId: number; senderId: number; content: string }
+  sendMessage(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: SendMessageDto,
   ) {
-    return await this.sendMessageUseCase.execute(
+    return this.sendMessageUseCase.execute(
       body.chatRoomId,
-      body.senderId,
-      body.content
+      user.id,
+      body.content,
     );
   }
 
-  //  Obtener historial de mensajes de una sala
   @Get('chat/:roomId')
-  async getMessages(@Param('roomId', ParseIntPipe) roomId: number) {
-    return await this.sendMessageUseCase.getHistory(roomId);
+  getMessages(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('roomId', ParseIntPipe) roomId: number,
+  ) {
+    return this.sendMessageUseCase.getHistory(roomId, user.id);
   }
 
-  //  Añadir foto al carrusel del usuario
   @Post('photo')
-  async addPhoto(@Body() body: { userId: number; url: string }) {
-    return await this.addPhotoUseCase.execute(body.userId, body.url);
+  addPhoto(@CurrentUser() user: AuthenticatedUser, @Body() body: AddPhotoDto) {
+    return this.addPhotoUseCase.execute(user.id, body.url);
   }
 
-  //  Cambiar plan de suscripción
-  @Post('subscription')
-  async updateSub(@Body() body: { userId: number; plan: 'FREE' | 'PREMIUM' | 'GOLD' }) {
-    return await this.changeSubscriptionUseCase.execute(body.userId, body.plan);
+  @Patch('subscription')
+  updateSubscription(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: ChangeSubscriptionDto,
+  ) {
+    return this.changeSubscriptionUseCase.execute(user.id, body.plan);
   }
-  
 }

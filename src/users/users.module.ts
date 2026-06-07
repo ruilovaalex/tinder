@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { RegisterUserUseCase } from './application/register-user.use-case';
 import { PrismaUserRepository } from './infrastructure/persistence/prisma-user.repository';
 import { GetAllUsersUseCase } from './application/get-all-users.use-case';
 import { GiveLikeUseCase } from './application/give-like.use-case';
@@ -30,7 +29,6 @@ import { SUBSCRIPTION_REPOSITORY } from './domain/repositories/subscription.repo
     InteractionPrismaService,
     ChatPrismaService,
     SubscriptionPrismaService,
-    RegisterUserUseCase,
     GetAllUsersUseCase,
     GiveLikeUseCase,
     UpdateProfileUseCase,

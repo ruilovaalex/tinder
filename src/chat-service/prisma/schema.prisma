@@ -6,6 +6,7 @@
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -16,6 +17,10 @@ model ChatRoom {
   id        Int      @id @default(autoincrement())
   matchId   Int
   createdAt DateTime @default(now())
+
+  messages Message[]
+
+  @@unique([matchId])
 }
 
 model Message {
@@ -25,4 +30,8 @@ model Message {
   content    String
   createdAt  DateTime @default(now())
   readAt     DateTime?
+
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+
+  @@index([chatRoomId, createdAt])
 }

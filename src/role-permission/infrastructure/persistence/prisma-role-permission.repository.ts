@@ -9,9 +9,7 @@ import {
 import { RolePermissionRepository } from '../../domain/repositories/role-permission.repository';
 
 @Injectable()
-export class PrismaRolePermissionRepository
-  implements RolePermissionRepository
-{
+export class PrismaRolePermissionRepository implements RolePermissionRepository {
   constructor(private readonly usersDb: UserPrismaService) {}
 
   assign(data: CreateRolePermissionDto): Promise<RolePermissionEntity> {

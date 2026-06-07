@@ -17,10 +17,14 @@ export interface DefaultRbacRoles {
 
 export interface AuthRepository {
   findByEmail(email: string): Promise<AuthUserEntity | null>;
+  findById(id: number): Promise<AuthUserEntity | null>;
   createUser(data: CreateAuthUserData): Promise<AuthUserEntity>;
   createProfile(userId: number): Promise<void>;
   createDefaultSubscription(userId: number): Promise<void>;
   countUsersByRole(roleId: number): Promise<number>;
-  ensureDefaultRbacData(defaultPermissions: string[]): Promise<DefaultRbacRoles>;
+  updateRefreshTokenHash(userId: number, hash: string | null): Promise<void>;
+  ensureDefaultRbacData(
+    defaultPermissions: string[],
+  ): Promise<DefaultRbacRoles>;
   isUniqueConstraintError(error: unknown): boolean;
 }

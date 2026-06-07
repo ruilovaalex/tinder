@@ -37,7 +37,9 @@ export class AuthService {
 
   async register(data: RegisterDto): Promise<AuthResponse> {
     const passwordHash = await bcrypt.hash(data.password, 10);
-    const role = await this.ensureRoleForNewUser();
+    const { userRole } = await this.authRepository.ensureDefaultRbacData(
+      this.defaultPermissions,
+    );
 
     try {
       const user = await this.authRepository.createUser({
@@ -45,13 +47,13 @@ export class AuthService {
         email: data.email,
         age: data.age,
         passwordHash,
-        roleId: role.id,
+        roleId: userRole.id,
       });
 
       await this.authRepository.createProfile(user.id);
       await this.authRepository.createDefaultSubscription(user.id);
 
-      return this.signUser(user);
+      return await this.issueTokenPair(user);
     } catch (error: unknown) {
       if (this.authRepository.isUniqueConstraintError(error)) {
         throw new ConflictException('El usuario ya existe');
@@ -78,35 +80,115 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales invalidas');
     }
 
-    return this.signUser(user);
+    return await this.issueTokenPair(user);
   }
 
-  private async ensureRoleForNewUser() {
-    const { adminRole, userRole } =
-      await this.authRepository.ensureDefaultRbacData(this.defaultPermissions);
-    const adminUsersCount = await this.authRepository.countUsersByRole(
-      adminRole.id,
-    );
+  async refresh(refreshToken: string): Promise<AuthResponse> {
+    const payload = await this.verifyRefreshToken(refreshToken);
+    const user = await this.authRepository.findById(payload.sub);
 
-    if (adminUsersCount === 0) {
-      return adminRole;
+    if (!user || !user.isActive || !user.refreshTokenHash) {
+      throw new UnauthorizedException('Refresh token invalido');
     }
 
-    return userRole;
+    const tokenMatches = await bcrypt.compare(
+      refreshToken,
+      user.refreshTokenHash,
+    );
+
+    if (!tokenMatches) {
+      throw new UnauthorizedException('Refresh token invalido');
+    }
+
+    return await this.issueTokenPair(user);
   }
 
-  private signUser(user: AuthenticatedUser): AuthResponse {
-    const payload: JwtPayload = {
+  async logout(userId: number): Promise<void> {
+    await this.authRepository.updateRefreshTokenHash(userId, null);
+  }
+
+  async validateAccessToken(payload: JwtPayload): Promise<AuthenticatedUser> {
+    if (payload.tokenType !== 'access') {
+      throw new UnauthorizedException('Tipo de token invalido');
+    }
+
+    const user = await this.authRepository.findById(payload.sub);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Usuario no autorizado');
+    }
+
+    return this.toAuthenticatedUser(user);
+  }
+
+  private async issueTokenPair(user: AuthenticatedUser): Promise<AuthResponse> {
+    const basePayload = {
       sub: user.id,
+      email: user.email,
+    };
+    const refreshSecret = this.getRequiredEnv('JWT_REFRESH_SECRET');
+    const accessToken = await this.jwtService.signAsync({
+      ...basePayload,
+      tokenType: 'access',
+    } satisfies JwtPayload);
+    const refreshToken = await this.jwtService.signAsync(
+      {
+        ...basePayload,
+        tokenType: 'refresh',
+      } satisfies JwtPayload,
+      {
+        secret: refreshSecret,
+        expiresIn: this.getRefreshExpiresIn(),
+      },
+    );
+
+    await this.authRepository.updateRefreshTokenHash(
+      user.id,
+      await bcrypt.hash(refreshToken, 10),
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+      user: this.toAuthenticatedUser(user),
+    };
+  }
+
+  private async verifyRefreshToken(refreshToken: string): Promise<JwtPayload> {
+    try {
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(
+        refreshToken,
+        { secret: this.getRequiredEnv('JWT_REFRESH_SECRET') },
+      );
+
+      if (payload.tokenType !== 'refresh') {
+        throw new UnauthorizedException('Tipo de token invalido');
+      }
+
+      return payload;
+    } catch {
+      throw new UnauthorizedException('Refresh token invalido o expirado');
+    }
+  }
+
+  private toAuthenticatedUser(user: AuthenticatedUser): AuthenticatedUser {
+    return {
+      id: user.id,
       email: user.email,
       name: user.name,
       roles: user.roles,
       permissions: user.permissions,
     };
+  }
 
-    return {
-      accessToken: this.jwtService.sign(payload),
-      user,
-    };
+  private getRequiredEnv(name: string): string {
+    const value = process.env[name];
+    if (!value || value.length < 32) {
+      throw new Error(`${name} must contain at least 32 characters`);
+    }
+    return value;
+  }
+
+  private getRefreshExpiresIn() {
+    return (process.env.JWT_REFRESH_EXPIRES_IN ?? '7d') as never;
   }
 }
