@@ -9,22 +9,12 @@
     "prebuild": "npm run prisma:generate",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "prisma:generate": "npm run prisma:generate:user && npm run prisma:generate:chat && npm run prisma:generate:interaction && npm run prisma:generate:subscription",
-    "prisma:generate:user": "prisma generate --config src/user-service/prisma.config.ts",
-    "prisma:generate:chat": "prisma generate --config src/chat-service/prisma.config.ts",
-    "prisma:generate:interaction": "prisma generate --config src/interaction-service/prisma.config.ts",
-    "prisma:generate:subscription": "prisma generate --config src/subscription-service/prisma.config.ts",
-    "prisma:migrate:deploy": "npm run prisma:migrate:deploy:user && npm run prisma:migrate:deploy:chat && npm run prisma:migrate:deploy:interaction && npm run prisma:migrate:deploy:subscription",
-    "prisma:migrate:deploy:user": "prisma migrate deploy --config src/user-service/prisma.config.ts",
-    "prisma:migrate:deploy:chat": "prisma migrate deploy --config src/chat-service/prisma.config.ts",
-    "prisma:migrate:deploy:interaction": "prisma migrate deploy --config src/interaction-service/prisma.config.ts",
-    "prisma:migrate:deploy:subscription": "prisma migrate deploy --config src/subscription-service/prisma.config.ts",
-    "prisma:migrate:status": "npm run prisma:migrate:status:user && npm run prisma:migrate:status:chat && npm run prisma:migrate:status:interaction && npm run prisma:migrate:status:subscription",
-    "prisma:migrate:status:user": "prisma migrate status --config src/user-service/prisma.config.ts",
-    "prisma:migrate:status:chat": "prisma migrate status --config src/chat-service/prisma.config.ts",
-    "prisma:migrate:status:interaction": "prisma migrate status --config src/interaction-service/prisma.config.ts",
-    "prisma:migrate:status:subscription": "prisma migrate status --config src/subscription-service/prisma.config.ts",
-    "seed:admin": "npm run build && node dist/scripts/seed-admin.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:status": "prisma migrate status",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "ts-node prisma/seed.ts",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -81,6 +71,9 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "jest": {
     "moduleFileExtensions": [

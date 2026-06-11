@@ -1,48 +1,26 @@
-import 'dotenv/config';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { SubscriptionPrismaService } from '../prisma-clients/subscription-prisma.service';
-import { UserPrismaService } from '../prisma-clients/user-prisma.service';
-import { AuthService } from './application/auth.service';
-import { AUTH_REPOSITORY } from './domain/repositories/auth.repository';
-import { AuthController } from './infrastructure/controllers/auth.controller';
-import { PermissionsGuard } from './infrastructure/guards/permissions.guard';
-import { PrismaAuthRepository } from './infrastructure/persistence/prisma-auth.repository';
-import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
-import { RolesGuard } from './infrastructure/guards/roles.guard';
-
-function requireSecret(name: string): string {
-  const value = process.env[name];
-  if (!value || value.length < 32) {
-    throw new Error(`${name} must contain at least 32 characters`);
-  }
-  return value;
-}
-
-const jwtSecret = requireSecret('JWT_SECRET');
-requireSecret('JWT_REFRESH_SECRET');
+import { PrismaModule } from '../prisma/prisma.module';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtStrategy } from './jwt.strategy';
+import { PermissionsGuard } from './permissions.guard';
+import { RolesGuard } from './roles.guard';
 
 @Module({
   imports: [
+    PrismaModule,
     PassportModule,
     JwtModule.register({
-      secret: jwtSecret,
+      secret: process.env.JWT_SECRET,
       signOptions: {
-        expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN ?? '15m') as never,
+        expiresIn: (process.env.JWT_EXPIRES_IN ?? '1d') as never,
       },
     }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    JwtStrategy,
-    PermissionsGuard,
-    RolesGuard,
-    UserPrismaService,
-    SubscriptionPrismaService,
-    { provide: AUTH_REPOSITORY, useClass: PrismaAuthRepository },
-  ],
-  exports: [AuthService, JwtModule, JwtStrategy, PermissionsGuard, RolesGuard],
+  providers: [AuthService, JwtStrategy, RolesGuard, PermissionsGuard],
+  exports: [AuthService, RolesGuard, PermissionsGuard, JwtModule],
 })
 export class AuthModule {}
